@@ -102,7 +102,7 @@ RESET:
 		
 		; Configure ADC
 		; 5Vref, ADC channel, 10bit ADC result
-		ldi tmp, 0<<REFS0 | 1<<MUX0 | 1<<MUX1
+		ldi tmp, 0<<REFS0 | 0<<MUX0 | 1<<MUX1
 		out ADMUX, tmp
 		; normal mode (single conversion mode), 16 prescaler (about 75khz at 9.6/8mhz ossc).
 		ldi tmp, 1<<ADEN | 1<<ADSC | 1<<ADPS2 | 0<<ADPS1 | 0<<ADPS0
