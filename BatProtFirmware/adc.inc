@@ -59,6 +59,9 @@ adc_4:	;apply voltage adjustment
 		add tmp2, tmp
 		; return voltage 
 		mov voltage, tmp2	; now we have beautiful result for printing
+		; prepare for next reading
+		clr adc_sumL
+		clr adc_sumH
 adc_exit:
 		cpi voltage, 0
 		breq ReadVoltage

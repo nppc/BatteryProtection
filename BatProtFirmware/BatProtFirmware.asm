@@ -20,7 +20,7 @@
 
 ; Predefined configurable parameters
 .EQU	LOW_BAT_VOLTAGE		= 150	; means 15.0 volts
-.EQU	BAT_CORRECTION		= 0		; Signed value for correction voltage readings
+.EQU	BAT_CORRECTION		= 1		; Signed value for correction voltage readings (for debug use 1)
 
 ; END OF predefined configurable parameters
 
@@ -53,9 +53,6 @@
 ; Variables XL:XH, YL:YH, ZL:ZH are used in interrupts, so only use them in main code when interrupts are disabled
 .def	adc_sumL	=	r8	; accumulated readings of ADC (sum of 64 values)
 .def	adc_sumH	=	r9	; accumulated readings of ADC (sum of 64 values)
-;.def	timer_flag	=	r11	; not 0 if we need to advance the timer
-;.def	timer_secs	=	r12	; Seconds of the timer
-;.def	timer_mins	=	r13	; Seconds of the timer
 
 .DSEG
 .ORG 0x60
@@ -84,7 +81,6 @@ RESET:
 		clr z1
 		inc z1
 		;clr adc_cntr		; couter for ADC readings. No need to initialize. Anyway we give some time for ADC to initialize all variables and states
-		ldi lowbat_cntr, 254	; We want to start this counter to make a delay for voltage stabilizing
 		
 		; change speed (ensure 9.6 mhz ossc)
 ;		ldi tmp, 1<<CLKPCE
@@ -114,10 +110,8 @@ RESET:
 
 
 		; Wait for voltage stabilizing and ADC warmup
-strt_wt:sbic ADCSRA, ADSC
-		rjmp strt_wt
-		; ADC is ready
-		rcall ReadVoltage
+		ldi lowbat_cntr, 254	; We want to start this counter to make a delay for voltage stabilizing
+strt_wt:rcall ReadVoltage
 		dec lowbat_cntr
 		brne strt_wt	; read ADC 255 times
 		; now our voltage and voltage_min is messed. Lets reset at least voltage_min.
@@ -130,35 +124,54 @@ strt_wt:sbic ADCSRA, ADSC
 		sei ; Enable interrupts
 		
 		sbi	PORTB, CNTRL_PIN	; turn on mosfet
-		
 
+		cbi	PORTB, LED_PIN	; turn off LED
+		
 main_loop:
-		; in the main loop we can run only not timing critical code like ADC reading
 		sleep
-		cbi	PORTB, LED_PIN	; turn off LED for preventing power loss
 		; read ADSC bit to see if conversion finished
+		sbi	PORTB, LED_PIN	; turn off LED
 		rcall ReadVoltage
+		cbi	PORTB, LED_PIN	; turn off LED
 		;compare voltage to minimum voltage
 		cpi voltage, LOW_BAT_VOLTAGE
 		brsh main_loop	; voltage is ok
 		; voltage is critical
 		; we need to have critical voltage for at least two seconds.
+		sbi	PORTB, LED_PIN	; indicate that critical issue is started
 		sleep	; wait for some time
+		cbi	PORTB, LED_PIN	; indicate that critical issue is started
 		; read voltage agian
 		rcall ReadVoltage
 		cpi voltage, LOW_BAT_VOLTAGE
 		brsh main_loop	; voltage is good
-		; turn off everything
+		; low bat is confirmed
 		cbi	PORTB, CNTRL_PIN	; turn off mosfet
-		sbi	PORTB, LED_PIN		; turn on LED for the capacitors drain quicker
-		cbi	PORTB, ENLDO_PIN	; turn of MCU (kill me)
+		; indicate that battery is disconnected by flashing the LED with interval 0.5 sec
+		rcall WDT_Start05s	; watchdog interval 0.5sec
+		ldi lowbat_cntr, 40	; We want to start this counter to make a delay for voltage stabilizing
+lowbatwarn:
+		cbi	PORTB, LED_PIN
+		sleep
+		sbi	PORTB, LED_PIN
+		sleep
+		dec lowbat_cntr
+		brne lowbatwarn
+	
+		; turn off everything
+		;cbi	PORTB, ENLDO_PIN	; turn of MCU (kill me)
+		cli
+		;cbi	PORTB, LED_PIN
 		; freeze
 L1:		;sleep
 		rjmp L1
 		
-
+WDT_Start05s:
+		ldi   tmp1, (0<<WDE) | (1<<WDTIE) | (0<<WDP3) | (1<<WDP2) | (0<<WDP1) | (1<<WDP0)		; 0.5s
+		rjmp WDT_Start1
 WDT_Start:	; with interrupt behaviour
 		ldi   tmp1, (0<<WDE) | (1<<WDTIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (1<<WDP0)		; 2s
+WDT_Start1:
 		wdr		; Reset Watchdog Timer
 		; Start timed sequence
 		in    tmp, WDTCR
