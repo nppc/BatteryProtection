@@ -20,18 +20,18 @@
 
 ; Predefined configurable parameters
 .EQU	LOW_BAT_VOLTAGE		= 150	; means 15.0 volts
-.EQU	BAT_CORRECTION		= 1		; Signed value for correction voltage readings (for debug use 1)
+.EQU	BAT_CORRECTION		= 0		; Signed value for correction voltage readings (for debug use 1)
 
 ; END OF predefined configurable parameters
 
 
 ; If you did not changed hardware, then you don't need to change this...
-.EQU	VOLT_DIV_CONST		= 151	; To get this number use formula (for 21v max): 
+.EQU	VOLTcd _DIV_CONST		= 141	; To get this number use formula (for 23v max): 
 										; 4095/(Vmax*10)*8, where Vmax=(R1+R2)*Vref/R2
 										; Vref=5v 
-										; and resistor values is from divider (10K/3K)
-										; Vmax=(10+3)*5/3=21.67
-										; 4095/(21.67*10)*8=151
+										; and resistor values is from divider (12K/3.3K)
+										; Vmax=(12+3.3)*5/3.3=23.18
+										; 4095/(23.18*10)*8=141
 										
 .EQU	ENLDO_PIN	= PB0	; Pin for device Configuration
 .EQU	LED_PIN		= PB2	; Vertical sync pin
