@@ -26,7 +26,7 @@
 
 
 ; If you did not changed hardware, then you don't need to change this...
-.EQU	VOLTcd _DIV_CONST		= 141	; To get this number use formula (for 23v max): 
+.EQU	VOLT_DIV_CONST		= 141	; To get this number use formula (for 23v max): 
 										; 4095/(Vmax*10)*8, where Vmax=(R1+R2)*Vref/R2
 										; Vref=5v 
 										; and resistor values is from divider (12K/3.3K)
