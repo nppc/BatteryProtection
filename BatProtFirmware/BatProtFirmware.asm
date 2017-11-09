@@ -26,7 +26,9 @@
 
 
 ; If you did not changed hardware, then you don't need to change this...
-.EQU	VOLT_DIV_CONST		= 141	; To get this number use formula (for 23v max): 
+;.EQU	VOLT_DIV_CONST		= 141		; 5V vref (12K/3.3K)
+.EQU	VOLT_DIV_CONST		= 138		; 1.1V vref (68K/3.3K)
+										; To get this number use formula (for 23v max): 
 										; 4095/(Vmax*10)*8, where Vmax=(R1+R2)*Vref/R2
 										; Vref=5v 
 										; and resistor values is from divider (12K/3.3K)
@@ -102,7 +104,8 @@ RESET:
 		
 		; Configure ADC
 		; 5Vref, ADC channel, 10bit ADC result
-		ldi tmp, 0<<REFS0 | 0<<MUX0 | 1<<MUX1
+		;ldi tmp, 0<<REFS0 | 0<<MUX0 | 1<<MUX1	; 5V vref
+		ldi tmp, 1<<REFS0 | 0<<MUX0 | 1<<MUX1	; 1.1V vref
 		out ADMUX, tmp
 		; normal mode (single conversion mode), 16 prescaler (about 75khz at 9.6/8mhz ossc).
 		ldi tmp, 1<<ADEN | 1<<ADSC | 1<<ADPS2 | 0<<ADPS1 | 0<<ADPS0

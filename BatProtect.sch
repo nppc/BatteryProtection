@@ -509,4 +509,6 @@ Wire Wire Line
 	6750 2550 7250 2550
 Connection ~ 7250 2550
 Connection ~ 6450 2550
+Text Notes 3700 2750 0    60   ~ 0
+R3=12K for 5V Vref\nR3=68K for 1.1v Vref
 $EndSCHEMATC
